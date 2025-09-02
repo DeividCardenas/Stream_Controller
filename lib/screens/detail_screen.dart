@@ -5,7 +5,6 @@ import '../models/media_item.dart';
 import '../services/audio_service.dart';
 import '../services/video_service.dart';
 import '../services/player_state.dart';
-import 'player_state.dart';
 
 class DetailScreen extends StatefulWidget {
   final MediaItem item;
@@ -32,7 +31,11 @@ class _DetailScreenState extends State<DetailScreen> {
     final preview = widget.item.previewUrl ?? '';
     final kind = widget.item.kind.toLowerCase();
     final lower = preview.toLowerCase();
-    _isVideo = kind.contains('video') || lower.endsWith('.mp4') || lower.endsWith('.m4v') || lower.endsWith('.mov') || kind.contains('feature-movie');
+    _isVideo = kind.contains('video') ||
+        lower.endsWith('.mp4') ||
+        lower.endsWith('.m4v') ||
+        lower.endsWith('.mov') ||
+        kind.contains('feature-movie');
     if (_isVideo) {
       _videoService = VideoService();
     }
@@ -56,10 +59,16 @@ class _DetailScreenState extends State<DetailScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [Colors.white.withOpacity(0.08), Colors.white.withOpacity(0.02)]),
+        gradient: LinearGradient(
+          colors: [Colors.white.withOpacity(0.08), Colors.white.withOpacity(0.02)],
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 18, offset: Offset(0, 8)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.18),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: Row(
@@ -69,7 +78,9 @@ class _DetailScreenState extends State<DetailScreen> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                widget.item.artworkUrl.isNotEmpty ? widget.item.artworkUrl : 'https://via.placeholder.com/100',
+                widget.item.artworkUrl.isNotEmpty
+                    ? widget.item.artworkUrl
+                    : 'https://via.placeholder.com/100',
                 width: width * 0.28,
                 height: width * 0.28,
                 fit: BoxFit.cover,
@@ -81,9 +92,11 @@ class _DetailScreenState extends State<DetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.item.trackName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                Text(widget.item.trackName,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 6),
-                Text(widget.item.artistName, style: const TextStyle(fontSize: 14, color: Colors.white70)),
+                Text(widget.item.artistName,
+                    style: const TextStyle(fontSize: 14, color: Colors.white70)),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -109,7 +122,6 @@ class _DetailScreenState extends State<DetailScreen> {
 
     return Column(
       children: [
-        // Controls row
         StreamBuilder<SimplePlayerState>(
           stream: _audioService.playerStateStream,
           initialData: SimplePlayerState.idle,
@@ -127,12 +139,16 @@ class _DetailScreenState extends State<DetailScreen> {
                       if (state == SimplePlayerState.playing) {
                         _audioService.pause();
                       } else {
-                        _audioService.play();
+                        _audioService.setUrlAndPlay(preview);
                       }
                     }
                   },
-                  style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(16)),
-                  child: Icon(state == SimplePlayerState.playing ? Icons.pause : Icons.play_arrow, size: 28),
+                  style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(), padding: const EdgeInsets.all(16)),
+                  child: Icon(
+                    state == SimplePlayerState.playing ? Icons.pause : Icons.play_arrow,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
@@ -144,7 +160,6 @@ class _DetailScreenState extends State<DetailScreen> {
           },
         ),
         const SizedBox(height: 12),
-        // Slider and times
         StreamBuilder<Duration?>(
           stream: _audioService.durationStream,
           initialData: Duration.zero,
@@ -155,21 +170,21 @@ class _DetailScreenState extends State<DetailScreen> {
               initialData: Duration.zero,
               builder: (context, posSnap) {
                 final pos = posSnap.data ?? Duration.zero;
-                final totalMs = (duration?.inMilliseconds ?? 0);
-                final percent = totalMs > 0 ? pos.inMilliseconds / totalMs : 0.0;
+                final totalMs = duration.inMilliseconds;
                 return Column(
                   children: [
                     Slider(
                       min: 0,
                       max: totalMs > 0 ? totalMs.toDouble() : 1.0,
                       value: pos.inMilliseconds.clamp(0, totalMs).toDouble(),
-                      onChanged: (v) => _audioService.seek(Duration(milliseconds: v.toInt())),
+                      onChanged: (v) =>
+                          _audioService.seek(Duration(milliseconds: v.toInt())),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(_formatDuration(pos)),
-                        Text(_formatDuration(duration ?? Duration.zero)),
+                        Text(_formatDuration(duration)),
                       ],
                     ),
                   ],
@@ -187,24 +202,28 @@ class _DetailScreenState extends State<DetailScreen> {
     if (preview == null || preview.isEmpty) {
       return const Text('No hay preview disponible para este video.');
     }
-    // Controls + Video widget
     return Column(
       children: [
-        // Vídeo área con ratio y estilo
         AspectRatio(
           aspectRatio: 16 / 9,
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.28), blurRadius: 16, offset: const Offset(0, 8))
-            ]),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.28),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                )
+              ],
+            ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Stack(
                 children: [
-                  // VideoPlayer widget cuando el controller esté listo
                   StreamBuilder<VideoPlayerController?>(
-                    stream: Stream.value(_videoService?.controller), // controller se obtiene directamente
+                    stream: Stream.value(_videoService?.controller),
                     builder: (context, _) {
                       final ctrl = _videoService?.controller;
                       if (ctrl == null) {
@@ -225,7 +244,6 @@ class _DetailScreenState extends State<DetailScreen> {
                       return VideoPlayer(ctrl);
                     },
                   ),
-                  // Overlay controls (play/pause, buffering, progress)
                   Positioned.fill(
                     child: StreamBuilder<SimplePlayerState>(
                       stream: _videoService?.playerStateStream,
@@ -251,10 +269,12 @@ class _DetailScreenState extends State<DetailScreen> {
                               child: state == SimplePlayerState.loading
                                   ? const CircularProgressIndicator()
                                   : Icon(
-                                      state == SimplePlayerState.playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                                      size: 64,
-                                      color: Colors.white.withOpacity(0.95),
-                                    ),
+                                state == SimplePlayerState.playing
+                                    ? Icons.pause_circle_filled
+                                    : Icons.play_circle_filled,
+                                size: 64,
+                                color: Colors.white.withOpacity(0.95),
+                              ),
                             ),
                           ),
                         );
@@ -267,7 +287,6 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        // Slider + times for video
         StreamBuilder<Duration?>(
           stream: _videoService?.durationStream,
           initialData: Duration.zero,
@@ -278,8 +297,7 @@ class _DetailScreenState extends State<DetailScreen> {
               initialData: Duration.zero,
               builder: (context, posSnap) {
                 final pos = posSnap.data ?? Duration.zero;
-                final totalMs = (duration?.inMilliseconds ?? 0);
-                final percent = totalMs > 0 ? pos.inMilliseconds / totalMs : 0.0;
+                final totalMs = duration.inMilliseconds;
                 return Column(
                   children: [
                     Padding(
@@ -288,14 +306,18 @@ class _DetailScreenState extends State<DetailScreen> {
                         min: 0,
                         max: totalMs > 0 ? totalMs.toDouble() : 1.0,
                         value: pos.inMilliseconds.clamp(0, totalMs).toDouble(),
-                        onChanged: (v) => _videoService?.seek(Duration(milliseconds: v.toInt())),
+                        onChanged: (v) =>
+                            _videoService?.seek(Duration(milliseconds: v.toInt())),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [Text(_formatDuration(pos)), Text(_formatDuration(duration ?? Duration.zero))],
+                        children: [
+                          Text(_formatDuration(pos)),
+                          Text(_formatDuration(duration)),
+                        ],
                       ),
                     ),
                   ],
@@ -320,17 +342,21 @@ class _DetailScreenState extends State<DetailScreen> {
     final item = widget.item;
 
     return Scaffold(
-      // Gradient AppBar
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
         centerTitle: true,
-        title: Text(item.trackName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(item.trackName,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFF1E1F3A), Color(0xFF0F141C)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          gradient: LinearGradient(
+            colors: [Color(0xFF1E1F3A), Color(0xFF0F141C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
         child: SafeArea(
           child: Column(
@@ -344,29 +370,42 @@ class _DetailScreenState extends State<DetailScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 8),
-                        if (_isVideo) _buildVideoPlayer(context) else _buildAudioPlayer(),
+                        if (_isVideo)
+                          _buildVideoPlayer(context)
+                        else
+                          _buildAudioPlayer(),
                         const SizedBox(height: 12),
                         Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Detalles', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                const Text('Detalles',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 8),
                                 Text('Artista: ${item.artistName}'),
                                 const SizedBox(height: 6),
                                 Text('Tipo: ${item.kind}'),
                                 const SizedBox(height: 6),
-                                SelectableText('Preview URL: ${item.previewUrl ?? "N/A"}', maxLines: 2),
+                                SelectableText(
+                                  'Preview URL: ${item.previewUrl ?? "N/A"}',
+                                  maxLines: 2,
+                                ),
                                 const SizedBox(height: 8),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     ElevatedButton(
-                                      onPressed: item.trackViewUrl.isNotEmpty ? () => _openUrl(item.trackViewUrl) : null,
+                                      onPressed: item.trackViewUrl.isNotEmpty
+                                          ? () => _openUrl(item.trackViewUrl)
+                                          : null,
                                       child: const Text('Abrir en Store'),
                                     ),
                                   ],

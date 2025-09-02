@@ -1,2 +1,9 @@
-
-enum SimplePlayerState { idle, loading, playing, paused, completed, error }
+enum SimplePlayerState {
+  idle,
+  loading,
+  playing,
+  paused,
+  completed,
+  stopped,
+  error
+}
